@@ -53,7 +53,7 @@ fn main() -> Result<()> {
     // Check if running with elevated privileges
     check_privileges();
 
-    println!("=== Windows COM Object Inspector ===\n");
+    print_header_art();
 
     // Determine which registry views to scan
     let mut views_to_scan = Vec::new();
@@ -133,6 +133,23 @@ fn check_privileges() {
             }
         }
     }
+}
+
+fn print_header_art() {
+    // Retro 8-bit style ASCII art header (plain text, terminal-friendly)
+    // Designed to be compact and look good in most terminal widths.
+    let art = r#"
+  __        __   _                            ____  ____             _             
+  \ \      / /__| | ___ ___  _ __ ___   ___  |  _ \|  _ \  ___  _ __| |_ ___  _ __ 
+   \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | |_) | | | |/ _ \| '__| __/ _ \| '__|
+    \ V  V /  __/ | (_| (_) | | | | | |  __/ |  __/| |_| | (_) | |  | || (_) | |   
+     \_/\_/ \___|_|\___\___/|_| |_| |_|\___| |_|   |____/ \___/|_|   \__\___/|_|   
+
+      Windows COM Object Inspector — Retro 8-bit
+
+"#;
+
+    println!("{art}");
 }
 
 fn scan_com_objects(
