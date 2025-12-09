@@ -7,6 +7,8 @@ use windows::Win32::System::Registry::{
     RegCloseKey, RegEnumKeyExW, RegOpenKeyExW, RegQueryValueExW, HKEY, HKEY_CLASSES_ROOT,
     KEY_READ, KEY_WOW64_32KEY, KEY_WOW64_64KEY, REG_SAM_FLAGS, REG_VALUE_TYPE,
 };
+// Console APIs used to enable UTF-8 output on Windows terminals
+use windows::Win32::System::Console::{SetConsoleOutputCP, SetConsoleCP};
 
 /// A Rust CLI for Windows that discovers COM objects and checks their programmatic usability
 #[derive(Parser, Debug)]
@@ -53,7 +55,13 @@ fn main() -> Result<()> {
     // Check if running with elevated privileges
     check_privileges();
 
-    print_header_art();
+    // Try to enable UTF-8 console output; fall back to ASCII art if unavailable
+    let unicode_ok = init_console_utf8();
+    if unicode_ok {
+        print_header_art_unicode();
+    } else {
+        print_header_art_ascii();
+    }
 
     // Determine which registry views to scan
     let mut views_to_scan = Vec::new();
@@ -135,21 +143,59 @@ fn check_privileges() {
     }
 }
 
-fn print_header_art() {
-    // Retro 8-bit style ASCII art header (plain text, terminal-friendly)
-    // Designed to be compact and look good in most terminal widths.
-    let art = r#"
-  __        __   _                            ____  ____             _             
-  \ \      / /__| | ___ ___  _ __ ___   ___  |  _ \|  _ \  ___  _ __| |_ ___  _ __ 
-   \ \ /\ / / _ \ |/ __/ _ \| '_ ` _ \ / _ \ | |_) | | | |/ _ \| '__| __/ _ \| '__|
-    \ V  V /  __/ | (_| (_) | | | | | |  __/ |  __/| |_| | (_) | |  | || (_) | |   
-     \_/\_/ \___|_|\___\___/|_| |_| |_|\___| |_|   |____/ \___/|_|   \__\___/|_|   
+/// Try to enable UTF-8 output in the Windows console. Returns true on success.
+fn init_console_utf8() -> bool {
+    #[cfg(windows)]
+    {
+        unsafe {
+            // 65001 = UTF-8 code page
+            let out_ok = SetConsoleOutputCP(65001).is_ok();
+            let in_ok = SetConsoleCP(65001).is_ok();
+            out_ok && in_ok
+        }
+    }
 
-      Windows COM Object Inspector — Retro 8-bit
+    #[cfg(not(windows))]
+    {
+        // Non-Windows terminals usually handle UTF-8 fine
+        true
+    }
+}
+
+/// Print the original Unicode header art (uses box-drawing and other glyphs).
+fn print_header_art_unicode() {
+    let art = r#"
+ _  .─')                .─')    .─') _                                 _   .─')                        .─') _   .─')     _ (`─.    ('─.             .─') _                _  .─')   
+( ╲( ─O )              ( OO ). (  OO) )                               ( '.( OO )_                     ( OO ) ) ( OO ).  ( (OO  ) _(  OO)           (  OO) )              ( ╲( ─O )  
+ ,──────. ,──. ,──.   (_)───╲_)╱     '._          .─────.  .─'),─────. ,──.   ,──.)        ,─.─') ,──.╱ ,──,' (_)───╲_)_.`     ╲(,──────.   .─────.╱     '._  .─'),─────. ,──────.  
+ │   ╱`. '│  │ │  │   ╱    _ │ │'──...__)        '  .──.╱ ( OO'  .─.  '│   `.'   │         │  │OO)│   ╲ │  │╲ ╱    _ │(__...──'' │  .───'  '  .──.╱│'──...__)( OO'  .─.  '│   ╱`. ' 
+ │  ╱  │ ││  │ │ .─') ╲  :` `. '──.  .──'        │  │('─. ╱   │  │ │  ││         │         │  │  ╲│    ╲│  │ )╲  :` `. │  ╱  │ │ │  │      │  │('─.'──.  .──'╱   │  │ │  ││  ╱  │ │ 
+ │  │_.' ││  │_│( OO ) '..`''.)   │  │          ╱_) │OO  )╲_) │  │╲│  ││  │'.'│  │         │  │(_╱│  .     │╱  '..`''.)│  │_.' │(│  '──.  ╱_) │OO  )  │  │   ╲_) │  │╲│  ││  │_.' │ 
+ │  .  '.'│  │ │ `─' ╱.─._)   ╲   │  │          ││  │`─'│   ╲ │  │ │  ││  │   │  │        ,│  │_.'│  │╲    │  .─._)   ╲│  .___.' │  .──'  ││  │`─'│   │  │     ╲ │  │ │  ││  .  '.' 
+ │  │╲  ╲('  '─'(_.─' ╲       ╱   │  │         (_'  '──'╲    `'  '─'  '│  │   │  │       (_│  │   │  │ ╲   │  ╲       ╱│  │      │  `───.(_'  '──'╲   │  │      `'  '─'  '│  │╲  ╲  
+ `──' '──' `─────'     `─────'    `──'            `─────'      `─────' `──'   `──'         `──'   `──'  `──'   `─────' `──'      `──────'   `─────'   `──'        `─────' `──' '──' 
+                                                                              
+            Inspector - Discover and Analyze COM Objects
 
 "#;
 
-    println!("{art}");
+    println!("{}", art);
+}
+
+/// Print a safe ASCII-only header as a fallback for terminals without UTF-8 support.
+fn print_header_art_ascii() {
+    let art = r#"
+  ____            _      ____  ___           _____               
+ |  _ \ ___  __ _| | ___/ ___|/ _ \ _ __ ___| ____|_  ___ __  ___ 
+ | |_) / _ \/ _` | |/ _ \___ \ | | | '__/ _ \  _| \ \/ / '_ \/ __|
+ |  _ <  __/ (_| | |  __/___) | |_| | | |  __/ |___ >  <| |_) \__ \
+ |_| \_\___|\__,_|_|\___|____/ \___/|_|  \___|_____/_/\_\ .__/|___/
+                                                       |_|        
+            Rust COM Inspector - Discover and Analyze COM Objects
+
+"#;
+
+    println!("{}", art);
 }
 
 fn scan_com_objects(
