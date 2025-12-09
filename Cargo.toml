@@ -1,0 +1,18 @@
+[package]
+name = "rust-ole-inspector"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+windows = { version = "0.56", features = [
+    "Win32_Foundation",
+    "Win32_System_Registry",
+    "Win32_System_Com",
+    "Win32_Security",
+    "Win32_System_Threading",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Diagnostics_Debug",
+    "Win32_System_Memory",
+] }
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
