@@ -13,7 +13,7 @@ This tool iterates through the **Windows Registry** at `HKEY_CLASSES_ROOT\CLSID`
 - 📊 **Usability Assessment**: Evaluates how programmatically usable each COM object is
 - 🏗️ **Multi-Architecture Support**: Handles both 32-bit and 64-bit registry views
 - 🔐 **Privilege Detection**: Warns when not running with elevated privileges
-- 🎯 **Filtering**: Search for specific COM objects by name or description
+- 🎯 **Filtering**: Search for specific COM objects by ProgID, description, or CLSID
 - 📝 **Detailed Output**: Optional verbose mode for complete information
 
 ## Requirements
@@ -68,8 +68,14 @@ rust-ole-inspector.exe --scan-64bit
 # Limit results to first 100 objects
 rust-ole-inspector.exe --limit 100
 
-# Filter by ProgID or description
+# Filter by ProgID, description, or CLSID substring
 rust-ole-inspector.exe --filter "Excel"
+
+# Filter by description only
+rust-ole-inspector.exe --filter-description "application"
+
+# Filter by CLSID only
+rust-ole-inspector.exe --filter-clsid "0002"
 
 # Combine options
 rust-ole-inspector.exe --verbose --filter "Word" --limit 10
@@ -81,7 +87,9 @@ rust-ole-inspector.exe --verbose --filter "Word" --limit 10
 - `--scan-32bit`: Scan 32-bit registry view
 - `--scan-64bit`: Scan 64-bit registry view (default on 64-bit systems)
 - `-l, --limit <NUMBER>`: Limit the number of results (0 = no limit)
-- `-f, --filter <TEXT>`: Filter by ProgID substring (case-insensitive)
+- `-f, --filter <TEXT>`: Filter by ProgID, description, or CLSID substring (case-insensitive)
+- `--filter-description <TEXT>`: Filter by description substring only (case-insensitive)
+- `--filter-clsid <TEXT>`: Filter by CLSID substring only (case-insensitive)
 - `-h, --help`: Display help information
 - `-V, --version`: Display version information
 

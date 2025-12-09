@@ -28,9 +28,17 @@ struct Args {
     #[arg(short, long, default_value = "0")]
     limit: usize,
 
-    /// Filter by ProgID substring (case-insensitive)
+    /// Filter by ProgID, description, or CLSID substring (case-insensitive)
     #[arg(short, long)]
     filter: Option<String>,
+
+    /// Filter by description substring only (case-insensitive)
+    #[arg(long)]
+    filter_description: Option<String>,
+
+    /// Filter by CLSID substring only (case-insensitive)
+    #[arg(long)]
+    filter_clsid: Option<String>,
 }
 
 struct ComObject {
@@ -196,6 +204,29 @@ fn scan_com_objects(
                     || clsid.to_lowercase().contains(&filter_lower);
 
                 if !matches {
+                    index += 1;
+                    continue;
+                }
+            }
+
+            // Check description filter
+            if let Some(ref desc_filter) = args.filter_description {
+                let desc_filter_lower = desc_filter.to_lowercase();
+                let desc_matches = description
+                    .as_ref()
+                    .map(|d| d.to_lowercase().contains(&desc_filter_lower))
+                    .unwrap_or(false);
+
+                if !desc_matches {
+                    index += 1;
+                    continue;
+                }
+            }
+
+            // Check CLSID filter
+            if let Some(ref clsid_filter) = args.filter_clsid {
+                let clsid_filter_lower = clsid_filter.to_lowercase();
+                if !clsid.to_lowercase().contains(&clsid_filter_lower) {
                     index += 1;
                     continue;
                 }
