@@ -58,18 +58,18 @@ fn main() -> Result<()> {
     // Determine which registry views to scan
     let mut views_to_scan = Vec::new();
     
-    if args.scan_32bit || (!args.scan_32bit && !args.scan_64bit) {
+    if args.scan_32bit || !args.scan_64bit {
         views_to_scan.push(("32-bit", KEY_WOW64_32KEY));
     }
     
-    if args.scan_64bit || (!args.scan_32bit && !args.scan_64bit) {
+    if args.scan_64bit || !args.scan_32bit {
         views_to_scan.push(("64-bit", KEY_WOW64_64KEY));
     }
 
     let mut all_objects = HashMap::new();
 
     for (view_name, view_flag) in views_to_scan {
-        println!("Scanning {} registry view...", view_name);
+        println!("Scanning {view_name} registry view...");
         match scan_com_objects(view_flag, &args) {
             Ok(objects) => {
                 println!("Found {} COM objects in {} view\n", objects.len(), view_name);
@@ -90,7 +90,7 @@ fn main() -> Result<()> {
                 }
             }
             Err(e) => {
-                eprintln!("Error scanning {} view: {}", view_name, e);
+                eprintln!("Error scanning {view_name} view: {e}");
             }
         }
     }
@@ -257,7 +257,7 @@ fn scan_com_objects(
 
 fn get_prog_id(hkey_clsid: HKEY, clsid: &str) -> Option<String> {
     unsafe {
-        let progid_path = HSTRING::from(format!("{}\\ProgID", clsid));
+        let progid_path = HSTRING::from(format!("{clsid}\\ProgID"));
         let mut hkey_progid = HKEY::default();
 
         if RegOpenKeyExW(hkey_clsid, &progid_path, 0, KEY_READ, &mut hkey_progid) == ERROR_SUCCESS
@@ -370,15 +370,15 @@ fn display_results(objects: &HashMap<String, ComObject>, args: &Args) -> Result<
         for obj in sorted_objects {
             println!("CLSID: {}", obj.clsid);
             if let Some(ref prog_id) = obj.prog_id {
-                println!("  ProgID: {}", prog_id);
+                println!("  ProgID: {prog_id}");
             }
             if let Some(ref desc) = obj.description {
-                println!("  Description: {}", desc);
+                println!("  Description: {desc}");
             }
             
             // Check programmatic usability
             let usability = check_usability(obj);
-            println!("  Programmatic Usability: {}", usability);
+            println!("  Programmatic Usability: {usability}");
             println!();
         }
     } else {
