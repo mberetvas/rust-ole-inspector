@@ -179,7 +179,7 @@ fn print_header_art_unicode() {
 
 "#;
 
-    println!("{}", art);
+    println!("{art}");
 }
 
 /// Print a safe ASCII-only header as a fallback for terminals without UTF-8 support.
@@ -195,7 +195,7 @@ fn print_header_art_ascii() {
 
 "#;
 
-    println!("{}", art);
+    println!("{art}");
 }
 
 fn scan_com_objects(
