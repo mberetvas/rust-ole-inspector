@@ -42,6 +42,10 @@ struct Args {
     /// Filter by CLSID substring only (case-insensitive)
     #[arg(long)]
     filter_clsid: Option<String>,
+
+    /// Filter by application keywords (comma-separated, case-insensitive)
+    #[arg(long, value_delimiter = ',')]
+    filter_app: Option<Vec<String>>,
 }
 
 struct ComObject {
@@ -295,6 +299,21 @@ fn scan_com_objects(
             if let Some(ref clsid_filter) = args.filter_clsid {
                 let clsid_filter_lower = clsid_filter.to_lowercase();
                 if !clsid.to_lowercase().contains(&clsid_filter_lower) {
+                    index += 1;
+                    continue;
+                }
+            }
+
+            // Check app filter
+            if let Some(ref app_filters) = args.filter_app {
+                let matches = app_filters.iter().any(|app| {
+                    let app_lower = app.to_lowercase();
+                    prog_id.as_ref().map(|p| p.to_lowercase().contains(&app_lower)).unwrap_or(false) ||
+                    description.as_ref().map(|d| d.to_lowercase().contains(&app_lower)).unwrap_or(false) ||
+                    clsid.to_lowercase().contains(&app_lower)
+                });
+
+                if !matches {
                     index += 1;
                     continue;
                 }
