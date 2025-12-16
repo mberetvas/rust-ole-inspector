@@ -2,6 +2,8 @@ use anyhow::Result;
 use clap::Parser;
 use std::io;
 use std::collections::HashMap;
+use std::fs::File;
+use csv::Writer;
 use windows::core::{HSTRING, PCWSTR, PWSTR};
 use windows::Win32::Foundation::ERROR_SUCCESS;
 use windows::Win32::System::Registry::{
@@ -117,6 +119,8 @@ fn main() -> Result<()> {
 
     // Display results
     display_results(&all_objects, &args)?;
+
+    prompt_export(&all_objects)?;
 
     // Wait for user to press 'q' to quit
     println!("Press 'q' to quit...");
@@ -486,6 +490,107 @@ fn display_results(objects: &HashMap<String, ComObject>, args: &Args) -> Result<
         }
     }
 
+    Ok(())
+}
+
+fn prompt_export(objects: &HashMap<String, ComObject>) -> Result<()> {
+    println!("Do you want to export the results? (y/n): ");
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    if input.trim().to_lowercase() != "y" {
+        return Ok(());
+    }
+
+    println!("Export format (txt/csv): ");
+    let mut format_input = String::new();
+    io::stdin().read_line(&mut format_input)?;
+    let format = format_input.trim().to_lowercase();
+    if format != "txt" && format != "csv" {
+        println!("Invalid format, skipping export.");
+        return Ok(());
+    }
+
+    println!("Enter file path to export to: ");
+    let mut path_input = String::new();
+    io::stdin().read_line(&mut path_input)?;
+    let path = path_input.trim();
+
+    if format == "txt" {
+        export_txt(objects, path)?;
+    } else {
+        export_csv(objects, path)?;
+    }
+
+    println!("Exported to {}", path);
+    Ok(())
+}
+
+fn export_txt(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
+    let mut output = String::new();
+    output.push_str("=== Results ===\n");
+    output.push_str(&format!("Total unique COM objects found: {}\n\n", objects.len()));
+
+    if objects.is_empty() {
+        output.push_str("No COM objects found matching the criteria.\n");
+    } else {
+        // Sort by ProgID
+        let mut sorted_objects: Vec<_> = objects.values().collect();
+        sorted_objects.sort_by(|a, b| {
+            match (&a.prog_id, &b.prog_id) {
+                (Some(pa), Some(pb)) => pa.cmp(pb),
+                (Some(_), None) => std::cmp::Ordering::Less,
+                (None, Some(_)) => std::cmp::Ordering::Greater,
+                (None, None) => a.clsid.cmp(&b.clsid),
+            }
+        });
+
+        let with_progid = sorted_objects.iter().filter(|obj| obj.prog_id.is_some()).count();
+        output.push_str(&format!("COM objects with ProgID: {} ({:.1}%)\n", with_progid, (with_progid as f64 / objects.len() as f64) * 100.0));
+        output.push_str(&format!("COM objects without ProgID: {}\n\n", objects.len() - with_progid));
+        output.push_str("--- Detailed Listing ---\n\n");
+
+        for obj in sorted_objects {
+            output.push_str(&format!("CLSID: {}\n", obj.clsid));
+            if let Some(ref prog_id) = obj.prog_id {
+                output.push_str(&format!("  ProgID: {}\n", prog_id));
+            }
+            if let Some(ref desc) = obj.description {
+                output.push_str(&format!("  Description: {}\n", desc));
+            }
+            let usability = check_usability(obj);
+            output.push_str(&format!("  Programmatic Usability: {}\n\n", usability));
+        }
+    }
+
+    std::fs::write(path, output)?;
+    Ok(())
+}
+
+fn export_csv(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
+    let mut wtr = Writer::from_writer(File::create(path)?);
+    wtr.write_record(&["CLSID", "ProgID", "Description", "Usability"])?;
+
+    let mut sorted_objects: Vec<_> = objects.values().collect();
+    sorted_objects.sort_by(|a, b| {
+        match (&a.prog_id, &b.prog_id) {
+            (Some(pa), Some(pb)) => pa.cmp(pb),
+            (Some(_), None) => std::cmp::Ordering::Less,
+            (None, Some(_)) => std::cmp::Ordering::Greater,
+            (None, None) => a.clsid.cmp(&b.clsid),
+        }
+    });
+
+    for obj in sorted_objects {
+        let usability = check_usability(obj);
+        wtr.write_record(&[
+            &obj.clsid,
+            obj.prog_id.as_deref().unwrap_or(""),
+            obj.description.as_deref().unwrap_or(""),
+            usability,
+        ])?;
+    }
+
+    wtr.flush()?;
     Ok(())
 }
 
