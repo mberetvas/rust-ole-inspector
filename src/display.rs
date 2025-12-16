@@ -96,13 +96,28 @@ pub fn prompt_export(objects: &HashMap<String, ComObject>) -> Result<()> {
     std::io::stdin().read_line(&mut path_input)?;
     let path = path_input.trim();
 
-    if format == "txt" {
-        export_txt(objects, path)?;
-    } else {
-        export_csv(objects, path)?;
+    if path.is_empty() {
+        println!("Export cancelled: No file path provided.");
+        return Ok(());
     }
 
-    println!("Exported to {}", path);
+    // Use a match block to handle errors instead of '?'
+    // This prevents the program from exiting immediately on "Access Denied" errors
+    let export_result = if format == "txt" {
+        export_txt(objects, path)
+    } else {
+        export_csv(objects, path)
+    };
+
+    match export_result {
+        Ok(_) => println!("Successfully exported to {}", path),
+        Err(e) => {
+            println!("\n❌ Export failed: {}", e);
+            println!("Hint: If running as Administrator, writing to the default folder (System32) is restricted.");
+            println!("      Try providing a full absolute path (e.g., C:\\Temp\\results.{})", format);
+        }
+    }
+
     Ok(())
 }
 
