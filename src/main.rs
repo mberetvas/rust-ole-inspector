@@ -68,6 +68,13 @@ fn main() -> Result<()> {
         print_header_art_ascii();
     }
 
+    // Prompt user for filter
+    println!("Enter a filter for COM objects (leave empty to search all):");
+    let mut interactive_filter = String::new();
+    io::stdin().read_line(&mut interactive_filter)?;
+    let interactive_filter = interactive_filter.trim().to_string();
+    let interactive_filter = if interactive_filter.is_empty() { None } else { Some(interactive_filter) };
+
     // Determine which registry views to scan
     let mut views_to_scan = Vec::new();
     
@@ -83,7 +90,7 @@ fn main() -> Result<()> {
 
     for (view_name, view_flag) in views_to_scan {
         println!("Scanning {view_name} registry view...");
-        match scan_com_objects(view_flag, &args) {
+        match scan_com_objects(view_flag, &args, &interactive_filter) {
             Ok(objects) => {
                 println!("Found {} COM objects in {} view\n", objects.len(), view_name);
                 
@@ -210,6 +217,7 @@ _  _, _// /_/ /_(__  )/ /_   / /_/ /_  /___  /___   /_/
 fn scan_com_objects(
     view_flag: REG_SAM_FLAGS,
     args: &Args,
+    interactive_filter: &Option<String>,
 ) -> Result<HashMap<String, ComObject>> {
     let mut objects = HashMap::new();
 
@@ -263,7 +271,7 @@ fn scan_com_objects(
             let description = get_description(hkey_clsid, &clsid);
 
             // Check if this object passes the filter
-            if let Some(ref filter) = args.filter {
+            if let Some(ref filter) = interactive_filter {
                 let filter_lower = filter.to_lowercase();
                 let matches = prog_id
                     .as_ref()
