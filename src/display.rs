@@ -178,7 +178,7 @@ fn export_txt(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
 /// Export results to a CSV file
 fn export_csv(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
     let mut wtr = Writer::from_writer(File::create(path)?);
-    wtr.write_record(&["CLSID", "ProgID", "Description", "Usability"])?;
+    wtr.write_record(["CLSID", "ProgID", "Description", "Usability"])?;
 
     let mut sorted_objects: Vec<_> = objects.values().collect();
     sorted_objects.sort_by(|a, b| {
@@ -192,7 +192,7 @@ fn export_csv(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
 
     for obj in sorted_objects {
         let usability = check_usability(obj);
-        wtr.write_record(&[
+        wtr.write_record([
             obj.clsid.as_str(),
             obj.prog_id.as_deref().unwrap_or(""),
             obj.description.as_deref().unwrap_or(""),
