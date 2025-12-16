@@ -91,22 +91,23 @@ pub fn prompt_export(objects: &HashMap<String, ComObject>) -> Result<()> {
         return Ok(());
     }
 
-    println!("Enter file path to export to: ");
+    println!("Enter file path to export to (Press Enter for 'results.{}'): ", format);
     let mut path_input = String::new();
     std::io::stdin().read_line(&mut path_input)?;
-    let path = path_input.trim();
+    let trimmed = path_input.trim();
 
-    if path.is_empty() {
-        println!("Export cancelled: No file path provided.");
-        return Ok(());
-    }
+    let path = if trimmed.is_empty() {
+        format!("results.{}", format)
+    } else {
+        trimmed.to_string()
+    };
 
     // Use a match block to handle errors instead of '?'
     // This prevents the program from exiting immediately on "Access Denied" errors
     let export_result = if format == "txt" {
-        export_txt(objects, path)
+        export_txt(objects, &path)
     } else {
-        export_csv(objects, path)
+        export_csv(objects, &path)
     };
 
     match export_result {

@@ -20,6 +20,14 @@ use types::{Args, ComObject};
 fn main() -> Result<()> {
     let args = Args::parse();
 
+    // Set current working directory to the executable's directory
+    // This ensures that default file paths are relative to the executable
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let _ = std::env::set_current_dir(exe_dir);
+        }
+    }
+
     // Check if running with elevated privileges
     check_privileges();
 
