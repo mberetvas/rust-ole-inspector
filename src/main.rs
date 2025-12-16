@@ -1,5 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
+use std::io;
 use std::collections::HashMap;
 use windows::core::{HSTRING, PCWSTR, PWSTR};
 use windows::Win32::Foundation::ERROR_SUCCESS;
@@ -105,6 +106,17 @@ fn main() -> Result<()> {
 
     // Display results
     display_results(&all_objects, &args)?;
+
+    // Wait for user to press 'q' to quit
+    println!("Press 'q' to quit...");
+    let stdin = io::stdin();
+    for line in stdin.lines() {
+        if let Ok(line) = line {
+            if line.trim().to_lowercase() == "q" {
+                break;
+            }
+        }
+    }
 
     Ok(())
 }
