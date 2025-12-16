@@ -110,11 +110,9 @@ fn main() -> Result<()> {
     // Wait for user to press 'q' to quit
     println!("Press 'q' to quit...");
     let stdin = io::stdin();
-    for line in stdin.lines() {
-        if let Ok(line) = line {
-            if line.trim().to_lowercase() == "q" {
-                break;
-            }
+    for line in stdin.lines().map_while(Result::ok) {
+        if line.trim().to_lowercase() == "q" {
+            break;
         }
     }
 
