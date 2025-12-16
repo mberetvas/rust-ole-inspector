@@ -169,6 +169,20 @@ cargo fmt
 cargo clippy
 ```
 
+## Project Structure
+
+The codebase is organized into focused modules, each with a single responsibility:
+
+- **`main.rs`**: Entry point and orchestration logic. Handles CLI setup, registry view selection, and result merging.
+- **`types.rs`**: Core data structures (`Args` for CLI arguments, `ComObject` for COM object data).
+- **`registry.rs`**: All Windows Registry operations including CLSID enumeration, ProgID/description lookup, and registry value reading.
+- **`filter.rs`**: Filter matching logic supporting multiple filter types (interactive, description-based, CLSID-based, and app-based).
+- **`display.rs`**: Result presentation and export functionality (console display, CSV export, TXT export, usability assessment).
+- **`console.rs`**: Console utilities for UTF-8 setup and header art display.
+- **`security.rs`**: Privilege detection and elevation warnings.
+
+This modular design improves maintainability, testability, and code clarity by separating concerns and allowing independent development of each module.
+
 ## License
 
 See [LICENSE](LICENSE) file for details.

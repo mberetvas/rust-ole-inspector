@@ -7,23 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Placeholder for new features.
-
 ### Changed
-- Placeholder for changes in existing functionality.
-
-### Deprecated
-- Placeholder for soon-to-be removed features.
-
-### Removed
-- Placeholder for now removed features.
-
-### Fixed
-- Placeholder for any bug fixes.
-
-### Security
-- Placeholder for vulnerability fixes.
+- **Refactored monolithic main.rs into modular architecture**: Split 609-line single file into 7 focused modules:
+  - `types.rs`: CLI arguments and ComObject data structures
+  - `registry.rs`: Windows Registry operations (CLSID enumeration, ProgID/description lookup)
+  - `filter.rs`: Filtering logic supporting multiple filter types
+  - `display.rs`: Result presentation and export functionality (console, CSV, TXT)
+  - `console.rs`: Console utilities (UTF-8 setup, header art)
+  - `security.rs`: Privilege detection and warnings
+  - `main.rs`: Clean orchestration layer
+  - **TLDR**: Improved maintainability, testability, and code clarity while maintaining all existing functionality.
 
 ## [0.1.0] - YYYY-MM-DD
 
