@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use std::io;
+use std::io::{self, Write};
 use std::collections::HashMap;
 use std::fs::File;
 use csv::Writer;
@@ -562,7 +562,8 @@ fn export_txt(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
         }
     }
 
-    std::fs::write(path, output)?;
+    let mut file = File::create(path)?;
+    file.write_all(output.as_bytes())?;
     Ok(())
 }
 
@@ -583,7 +584,7 @@ fn export_csv(objects: &HashMap<String, ComObject>, path: &str) -> Result<()> {
     for obj in sorted_objects {
         let usability = check_usability(obj);
         wtr.write_record(&[
-            &obj.clsid,
+            obj.clsid.as_str(),
             obj.prog_id.as_deref().unwrap_or(""),
             obj.description.as_deref().unwrap_or(""),
             usability,
